@@ -22,7 +22,7 @@ async function main() {
   // await chainHandlerMgr.run();
   while (true) {
     await chainHandlerMgr.loop();
-    logger.info(utils.format('Waiting for {0} seconds...', config.get('scanInterval')));
+    MainLogger.info(utils.format('Waiting for {0} seconds...', config.get('scanInterval')));
     await utils.sleep(config.get('scanInterval'));
   }
 }

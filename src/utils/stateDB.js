@@ -2,7 +2,7 @@
  * @Description: 
  * @Author: kay
  * @Date: 2023-05-15 15:00:09
- * @LastEditTime: 2023-05-15 15:00:16
+ * @LastEditTime: 2023-05-16 10:27:08
  * @LastEditors: kay
  */
 const fs = require('fs');
@@ -20,7 +20,7 @@ class stateDB {
             this.state = JSON.parse(fs.readFileSync(path));
         }
         catch (e) {
-            logger.info('File not exist');
+            MainLogger.info('File not exist');
             this.state = {};
         }
     }

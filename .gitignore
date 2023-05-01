@@ -1,1 +1,6 @@
 node_modules
+logs
+fileout.log
+omnivser.db
+package-lock.json
+test*
