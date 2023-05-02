@@ -1,6 +1,12 @@
+/*
+ * @Description: 
+ * @Author: kay
+ * @Date: 2023-05-12 10:55:06
+ * @LastEditTime: 2023-05-16 10:37:06
+ * @LastEditors: kay
+ */
 'use strict';
 
-const globalDefine = require("./globalDefine");
 const assert = require('assert');
 const logger = require("./logger");
 
@@ -51,31 +57,6 @@ function toByteArray(hexString) {
     return result;
 }
 
-// Checkout if the format of a message is correct
-function checkMessageFormat(message) {
-    logger.debug('checkMessageFormat', message, message.content.data);
-    assert(typeof(message.id) == 'string');
-    assert(typeof(message.fromChain) == 'string');
-    assert(typeof(message.toChain) == 'string');
-    assert(typeof(message.sender) == 'object');
-    assert(typeof(message.signer) == 'object');
-    assert(typeof(message.content.contract) == 'object');
-    assert(typeof(message.content.action) == 'object');
-    assert(typeof(message.session.id) == 'string');
-    assert((message.session.callback == null || typeof(message.session.callback) == 'object'));
-    for (let i = 0; i < message.sqos.length; i++) {
-        let item = message.sqos[i];
-        assert(item.t >= 0 && item.t < globalDefine.SQoSType.MAX);
-        assert(item.v == null || typeof(item.v) == 'object');
-    }
-    for (let i = 0; i < message.content.data.length; i++) {
-        let item = message.content.data[i];
-        assert(item.msgType >= 0 && item.msgType < globalDefine.MsgType.MAX);
-        assert(typeof(item.name) == 'string');
-        assert(item.value == null || typeof(item.value) == 'string' || typeof(item.value) == 'object');
-    }
-}
-
 // Camel-Case to Snake-case
 function camelToSnake(object) {
     let newObject = {};
@@ -104,7 +85,6 @@ module.exports = {
     toByteArray: toByteArray,
     format: format,
     stringToByteArray: stringToByteArray,
-    checkMessageFormat: checkMessageFormat,
     camelToSnake,
     snakeToCamel,
 }

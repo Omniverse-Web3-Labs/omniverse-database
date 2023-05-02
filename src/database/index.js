@@ -69,14 +69,14 @@ class Database {
               if (err) {
                 return console.error(err);
               }
-              console.log('Table created successfully!');
+              console.log('settlement transactions table created successfully!');
             }
           );
           this.database.serialize(() => {
-            this.database.run('CREATE INDEX pk_index ON pendingTransactions (pk)');
-            this.database.run('CREATE INDEX chainName_index ON pendingTransactions (chainName)');
-            this.database.run('CREATE INDEX nonce_index ON pendingTransactions (nonce)');
-            this.database.run('CREATE INDEX blockNumber_index ON pendingTransactions (blockNumber)');
+            this.database.run('CREATE INDEX pk_index ON settlementTransactions (pk)');
+            this.database.run('CREATE INDEX chainName_index ON settlementTransactions (chainName)');
+            this.database.run('CREATE INDEX nonce_index ON settlementTransactions (nonce)');
+            this.database.run('CREATE INDEX blockNumber_index ON settlementTransactions (blockNumber)');
           });
         }
       }

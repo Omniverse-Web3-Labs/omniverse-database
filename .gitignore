@@ -1,6 +1,6 @@
 node_modules
 logs
 fileout.log
-omnivser.db
+omniverse.db
 package-lock.json
 test*

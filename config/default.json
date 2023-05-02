@@ -1,0 +1,29 @@
+{
+  "scanInterval": 10,
+  "logLevel": "debug",
+  "secret": "config/.secret",
+  "database": "omniverse.db",
+  "stateDB": ".state",
+  "payload": {
+    "keys": ["op", "exData", "amount"],
+    "types": ["uint8", "bytes", "uint256"]
+  },
+  "networks": {
+    "CHAIN1": {
+      "nodeAddress": "ws://127.0.0.1:8646",
+      "chainId": 1337,
+      "omniverseContractAddress": "0x4a41672e9a217C3193b12483400b03CE1851e145",
+      "omniverseContractAbiPath": "./res/SkywalkerFungible.json",
+      "compatibleChain": "ethereum",
+      "omniverseChainId": 1
+    },
+    "CHAIN2": {
+      "nodeAddress": "ws://127.0.0.1:8647",
+      "chainId": 1337,
+      "omniverseContractAddress": "0x4a41672e9a217C3193b12483400b03CE1851e145",
+      "omniverseContractAbiPath": "./res/SkywalkerFungible.json",
+      "compatibleChain": "ethereum",
+      "omniverseChainId": 2
+    }
+  }
+}
