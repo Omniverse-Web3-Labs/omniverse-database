@@ -29,7 +29,7 @@ function dbService(database){
   //监听端口
   app.listen(port);
 
-  console.log(
+  MainLogger.info(
     '%s | omniverse database server initializing | listening on port %s | process id %s',
     moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
     port,

@@ -6,7 +6,6 @@ const ethereum = require('./ethereum.js');
 const fs = require('fs');
 const utils = require('../../utils/utils.js');
 const logger = require('../../utils/logger.js');
-const globalDefine = require('../../utils/globalDefine');
 
 const OMNIVERSE_TOKEN_TRANSFER = 'OmniverseTokenTransfer';
 
@@ -40,8 +39,6 @@ class EthereumHandler {
     );
     this.web3 = new Web3(provider);
     this.web3.eth.handleRevert = true;
-    let secret = JSON.parse(fs.readFileSync(config.get('secret')));
-    this.testAccountPrivateKey = secret[this.chainName];
     // omniverseContract
     let omniverseContractAddress = config.get(
       'networks.' + this.chainName + '.omniverseContractAddress'
@@ -86,16 +83,16 @@ class EthereumHandler {
     if (!fromBlock) {
       fromBlock = 'latest';
     } else {
-      if (blockNumber - fromBlock > globalDefine.LogRange) {
-        logger.info('Exceed max log range, subscribe from the latest');
+      if (blockNumber - fromBlock > 5000) {
+        this.logger.info('Exceed max log range, subscribe from the latest');
         fromBlock = 'latest';
       }
     }
-    logger.info(this.chainName, 'Block height', fromBlock);
+    this.logger.info(this.chainName, 'Block height', fromBlock);
     if (!fromBlock) {
       fromBlock = 'latest';
     } else {
-      if (blockNumber - fromBlock > globalDefine.LogRange) {
+      if (blockNumber - fromBlock > 5000) {
         this.logger.info('Exceed max log range, subscribe from the latest');
         fromBlock = 'latest';
       }

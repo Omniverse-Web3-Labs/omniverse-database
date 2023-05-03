@@ -1,3 +1,10 @@
+/*
+ * @Description: 
+ * @Author: kay
+ * @Date: 2023-05-13 14:22:30
+ * @LastEditTime: 2023-05-16 12:01:11
+ * @LastEditors: kay
+ */
 'use strict';
 const config = require('config');
 
@@ -11,7 +18,7 @@ class chainHandlerMgr {
     }
 
     async init() {
-        logger.info("Init chainHandlerMgr");
+        MainLogger.info("Init chainHandlerMgr");
         let networks = config.get('networks');
         for (let i in networks) {
             let network = networks[i];
@@ -25,7 +32,7 @@ class chainHandlerMgr {
     getHandlerByName(name_) {
         if (this.chainHandlers[name_] == null) {
             let stack = new Error().stack;
-            logger.error(utils.format('Chain handler {0} can not be found, {1}', name_, stack));
+            MainLogger.error(utils.format('Chain handler {0} can not be found, {1}', name_, stack));
         }
         return this.chainHandlers[name_];
     }
