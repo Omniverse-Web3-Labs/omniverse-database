@@ -1,10 +1,3 @@
-/*
- * @Description: 
- * @Author: kay
- * @Date: 2023-05-13 14:22:30
- * @LastEditTime: 2023-05-16 12:01:11
- * @LastEditors: kay
- */
 'use strict';
 const config = require('config');
 

@@ -77,7 +77,7 @@ class EthereumHandler {
     StateDB.setValue(this.chainName, blockNumber);
   }
 
-  async start(database, chainCount) {
+  async start(chainCount) {
     let fromBlock = StateDB.getValue(this.chainName);
     let blockNumber = await this.web3.eth.getBlockNumber();
     if (!fromBlock) {
@@ -139,11 +139,11 @@ class EthereumHandler {
         let m = [
           message.txData.from,
           this.chainName,
-          message.txData.nonce,
+          Number(message.txData.nonce),
           event.blockNumber,
         ];
 
-        database.setValue(m, chainCount);
+        Database.setValue(m, chainCount);
         StateDB.setValue(this.chainName, event.blockNumber + 1);
         this.logger.info(
           `pk: ${message.txData.from}, nonce: ${message.txData.nonce}, chainName: ${this.chainName}, blockNumber: ${event.blockNumber}`

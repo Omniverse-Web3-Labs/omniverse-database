@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const fs = require('fs');
 const Web3 = require('web3');
 
-function dbService(database){
+function dbService(){
   var app = express();
   app.use(compression());
   app.use(cookieParser());
@@ -24,7 +24,7 @@ function dbService(database){
     res.setHeader('Access-Control-Allow-Origin', '*');
     next();
   });
-  require('./router')(app, database);
+  require('./router')(app);
   var port = 8866;
   //监听端口
   app.listen(port);

@@ -1,11 +1,3 @@
-/*
- * @Description: 
- * @Author: kay
- * @Date: 2023-05-15 18:08:22
- * @LastEditTime: 2023-05-16 10:26:35
- * @LastEditors: kay
- */
-// const ethereum = require('./ethereum');
 module.exports = function (app, database) {
   app.get('/ominverse', async function (req, res) {
     let chainName = req.query.chainName;

@@ -24,16 +24,18 @@ class Database {
           this.database.run(
             `
                     CREATE TABLE IF NOT EXISTS pendingTransactions (
-                        pk varchar(64) NOT NULL,
+                        pk varchar(130) NOT NULL,
                         chainName varchar(256) NOT NULL,
                         nonce int(128) NOT NULL,
-                        blockNumber int(64) NOT NULL
+                        blockNumber int(128) NOT NULL
                   )`,
             (err) => {
               if (err) {
                 return MainLogger.error(err);
               }
-              MainLogger.info('Pending transactions table created successfully!');
+              MainLogger.info(
+                'Pending transactions table created successfully!'
+              );
             }
           );
           this.database.serialize(() => {
@@ -66,10 +68,10 @@ class Database {
           this.database.run(
             `
                     CREATE TABLE IF NOT EXISTS settlementTransactions (
-                        pk varchar(64) NOT NULL,
+                        pk varchar(130) NOT NULL,
                         chainName varchar(256) NOT NULL,
                         nonce int(128) NOT NULL,
-                        blockNumber int(64) NOT NULL
+                        blockNumber int(128) NOT NULL
                   )`,
             (err) => {
               if (err) {
@@ -98,7 +100,7 @@ class Database {
       }
     );
 
-    dbService(this.database);
+    dbService();
   }
 
   getValue(sql, statement) {
@@ -117,7 +119,7 @@ class Database {
     // this.state[key] = value;
     this.database.run(
       'INSERT INTO pendingTransaction (pk, chainName, nonce, blockNumber) VALUES (?, ?, ?, ?)',
-      message,
+      value,
       (err) => {
         if (err) {
           console.error(err.message);
