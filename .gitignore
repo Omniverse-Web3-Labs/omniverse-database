@@ -5,3 +5,4 @@ omniverse.db
 test.db
 package-lock.json
 test*
+.state
