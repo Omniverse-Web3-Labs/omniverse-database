@@ -3,10 +3,8 @@ const compression = require('compression');
 //操作日期的插件
 const moment = require('moment');
 const cookieParser = require('cookie-parser');
-const fs = require('fs');
-const Web3 = require('web3');
 
-function dbService(){
+async function dbService() {
   var app = express();
   app.use(compression());
   app.use(cookieParser());
@@ -35,6 +33,6 @@ function dbService(){
     port,
     process.pid
   );
-};
+}
 
 module.exports = dbService;

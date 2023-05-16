@@ -139,11 +139,11 @@ class EthereumHandler {
         let m = [
           message.txData.from,
           this.chainName,
-          Number(message.txData.nonce),
+          message.txData.nonce,
           event.blockNumber,
         ];
 
-        Database.setValue(m, chainCount);
+        await Database.insert(m, chainCount);
         StateDB.setValue(this.chainName, event.blockNumber + 1);
         this.logger.info(
           `pk: ${message.txData.from}, nonce: ${message.txData.nonce}, chainName: ${this.chainName}, blockNumber: ${event.blockNumber}`

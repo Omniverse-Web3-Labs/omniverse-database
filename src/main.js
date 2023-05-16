@@ -1,14 +1,15 @@
 const chainHandlerMgr = require('./basic/chainHandlerMgr');
+const Db = require('./database');
+global.Database = new Db();
 global.config = require('config');
 global.logger = require('./utils/logger');
 global.MainLogger = require('./utils/logger').getLogger('main');
 global.utils = require('./utils/utils');
-global.Database = require('./database');
 global.StateDB = require('./utils/stateDB');
 
 async function init() {
   await chainHandlerMgr.init();
-  Database.init(config.get('database'));
+  await Database.init(config.get('database'));
   StateDB.init(config.get('stateDB'));
 }
 

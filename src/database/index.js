@@ -1,172 +1,132 @@
-const sqlite3 = require('sqlite3').verbose();
+const sqlite = require('sqlite');
+const sqlite3 = require('sqlite3');
 const dbService = require('./db-service');
 
-class Database {
+class Db {
   constructor() {
     this.database = {};
     this.path;
   }
 
-  init(path) {
-    this.path = path;
-    this.database = new sqlite3.Database(path);
-    // check the table
-    this.database.get(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='pendingTransactions'",
-      (err, row) => {
-        if (err) {
-          MainLogger.error(err.message);
-          return;
-        }
-        if (row) {
-          MainLogger.info('Pending transactions table exists!');
-        } else {
-          this.database.run(
-            `
-                    CREATE TABLE IF NOT EXISTS pendingTransactions (
-                        pk varchar(130) NOT NULL,
-                        chainName varchar(256) NOT NULL,
-                        nonce int(128) NOT NULL,
-                        blockNumber int(128) NOT NULL
-                  )`,
-            (err) => {
-              if (err) {
-                return MainLogger.error(err);
-              }
-              MainLogger.info(
-                'Pending transactions table created successfully!'
-              );
-            }
-          );
-          this.database.serialize(() => {
-            this.database.run(
-              'CREATE INDEX pk_index ON pendingTransactions (pk)'
-            );
-            this.database.run(
-              'CREATE INDEX chainName_index ON pendingTransactions (chainName)'
-            );
-            this.database.run(
-              'CREATE INDEX nonce_index ON pendingTransactions (nonce)'
-            );
-            this.database.run(
-              'CREATE INDEX blockNumber_index ON pendingTransactions (blockNumber)'
-            );
-          });
-        }
-      }
-    );
-
-    this.database.get(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='settlementTransactions'",
-      (err, row) => {
-        if (err) {
-          return console.error(err.message);
-        }
-        if (row) {
-          MainLogger.info('Settlement transactions table exists!');
-        } else {
-          this.database.run(
-            `
-                    CREATE TABLE IF NOT EXISTS settlementTransactions (
-                        pk varchar(130) NOT NULL,
-                        chainName varchar(256) NOT NULL,
-                        nonce int(128) NOT NULL,
-                        blockNumber int(128) NOT NULL
-                  )`,
-            (err) => {
-              if (err) {
-                MainLogger.error(err);
-              }
-              MainLogger.info(
-                'settlement transactions table created successfully!'
-              );
-            }
-          );
-          this.database.serialize(() => {
-            this.database.run(
-              'CREATE INDEX st_pk_index ON settlementTransactions (pk)'
-            );
-            this.database.run(
-              'CREATE INDEX st_chainName_index ON settlementTransactions (chainName)'
-            );
-            this.database.run(
-              'CREATE INDEX st_nonce_index ON settlementTransactions (nonce)'
-            );
-            this.database.run(
-              'CREATE INDEX st_blockNumber_index ON settlementTransactions (blockNumber)'
-            );
-          });
-        }
-      }
-    );
-
-    dbService();
-  }
-
-  getValue(sql, statement) {
-    let result;
-    this.database.all(sql, statement, (err, rows) => {
-      if (err) {
-        console.log(err.message);
+  async init(path) {
+    try {
+      this.database = await sqlite.open({
+        filename: path,
+        driver: sqlite3.Database,
+      });
+      // check the table
+      let pendingTable = await this.database.get(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='pendingTransactions'"
+      );
+      if (pendingTable) {
+        MainLogger.info('Pending transactions table exists ...');
       } else {
-        result = rows;
+        await this.database.run(
+          `
+                CREATE TABLE IF NOT EXISTS pendingTransactions (
+                    pk text NOT NULL,
+                    nonce int(128) NOT NULL,
+                    chains text NOT NULL
+              )`
+        );
+        await Promise.all([
+          this.database.run(
+            'CREATE INDEX pk_index ON pendingTransactions (pk)'
+          ),
+          this.database.run(
+            'CREATE INDEX nonce_index ON pendingTransactions (nonce)'
+          ),
+        ]);
       }
-    });
-    return result;
+
+      let settlementTable = await this.database.get(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='settlementTransactions'"
+      );
+      if (settlementTable) {
+        MainLogger.info('Settlement transactions table exists ...');
+      } else {
+        await this.database.run(
+          `
+                CREATE TABLE IF NOT EXISTS settlementTransactions (
+                    pk text NOT NULL,
+                    nonce int(128) NOT NULL,
+                    chains text NOT NULL
+              )`
+        );
+        await Promise.all([
+          this.database.run(
+            'CREATE INDEX st_pk_index ON settlementTransactions (pk)'
+          ),
+          this.database.run(
+            'CREATE INDEX st_nonce_index ON pendingTransactions (nonce)'
+          ),
+        ]);
+      }
+    } catch (err) {
+      MainLogger.error('Failed to initialize the database: ', err.message);
+    }
+    // return;
+
+    await dbService();
   }
 
-  setValue(value, chainCount) {
-    // this.state[key] = value;
-    this.database.run(
-      'INSERT INTO pendingTransaction (pk, chainName, nonce, blockNumber) VALUES (?, ?, ?, ?)',
-      value,
-      (err) => {
-        if (err) {
-          console.error(err.message);
-        } else {
-          console.log('Data inserted successfully.');
-        }
-      }
-    );
-    // add.finalize();
-    this.database.all(
-      'SELECT * FROM pendingTransactions WHERE pk = ? AND nonce = ?',
-      [value[0], value[3]],
-      (err, rows) => {
-        if (err) {
-          console.log(err.message);
-        } else {
-          // move database from penddingTransactons table to settlementTransactions table
-          if (rows.length == chainCount) {
-            // insert to settlementTransactions table
-            let stmt = this.database.prepare(
-              'INSERT INTO settlementTransactions (pk, chainName, nonce, blockNumber) VALUES (?, ?, ?, ?)'
-            );
-            for (let row of rows) {
-              stmt.run(row, (err) => {
-                if (err) {
-                  console.error(err.message);
-                }
-              });
-            }
-            stmt.finalize();
+  async getValue(sql, statement) {
+    return this.database.all(sql, statement);
+  }
 
-            // remove from pendingTransactions table
-            stmt = this.database.prepare(
-              'DELETE FROM pendingTransactions WHERE WHERE pk = ? AND nonce = ?'
-            );
-            stmt.run([value[0], value[3]], (err) => {
-              if (err) {
-                console.error(err.message);
-              }
-            });
-            stmt.finalize();
-          }
+  async insert(value, chainCount, logger) {
+    let [pk, chainName, nonce, blockNumber] = value;
+    logger = logger ? logger : MainLogger;
+    let settled = await this.database.get(
+      'SELECT * FROM settlementTransactions WHERE pk = ? AND nonce = ?',
+      [pk, nonce]
+    );
+    if (settled) {
+      logger.warn('pk: %s, nonce: %s already settlement', pk, nonce);
+      return;
+    }
+
+    let pending = await this.database.get(
+      'SELECT * FROM pendingTransactions WHERE pk = ? AND nonce = ?',
+      [pk, nonce]
+    );
+
+    if (pending) {
+      let parsedData = JSON.parse(pending.chains);
+      let chains = new Map(parsedData);
+      if (chains.has(value[1])) {
+        logger.warn('pk: %s, nonce: %s already pending', pk, nonce);
+      } else {
+        chains.set(value[1], value[3]);
+        let chainsData = JSON.stringify(Array.from(chains.entries()));
+        console.log();
+        if (chains.size == chainCount) {
+          await Promise.all([
+            this.database.run(
+              'INSERT INTO settlementTransactions (pk, nonce, chains) VALUES (?, ?, ?)',
+              [pk, nonce, chainsData]
+            ),
+            this.database.run(
+              'DELETE FROM pendingTransactions WHERE pk = ? AND nonce = ?',
+              [pk, nonce]
+            ),
+          ]);
+        } else {
+          await this.database.run(
+            'INSERT INTO pendingTransactions (pk, nonce, chains) VALUES (?, ?, ?)',
+            [pk, nonce, chainsData]
+          );
         }
       }
-    );
-    // fs.writeFileSync(this.path, JSON.stringify(this.state, null, '\t'));
+    } else {
+      let chains = new Map();
+      chains.set(chainName, blockNumber);
+      await this.database.run(
+        'INSERT INTO pendingTransactions (pk, nonce, chains) VALUES (?, ?, ?)',
+        [pk, nonce, JSON.stringify(Array.from(chains.entries()))]
+      );
+    }
   }
 }
 
-module.exports = new Database();
+module.exports = Db;
