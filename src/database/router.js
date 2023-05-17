@@ -3,10 +3,18 @@ module.exports = async function (app) {
     try {
       let chainName = req.query.chainName;
       let pk = req.query.pk;
-      let rows = await Database.getValue(
-        'SELECT * FROM pendingTransactions WHERE pk = ?',
-        [pk]
-      );
+      let rows = [];
+      if (pk) {
+        rows = await Database.getValue(
+          'SELECT * FROM pendingTransactions WHERE pk = ?',
+          [pk]
+        )
+      } else {
+        rows = await Database.getValue(
+          'SELECT * FROM settlementTransactions',
+          [pk]
+        )
+      }
       let result = [];
       for (let row of rows) {
         let parsedChains = JSON.parse(row.chains);
