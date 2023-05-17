@@ -12,7 +12,7 @@ const OMNIVERSE_TOKEN_TRANSFER = 'OmniverseTokenTransfer';
 class EthereumHandler {
   constructor(chainName) {
     this.chainName = chainName;
-    this.logger = logger.getLogger(chainName);
+    this.logger = logger.getLogger(chainName.toLowerCase());
   }
 
   async init() {
@@ -108,7 +108,6 @@ class EthereumHandler {
       .on('data', async (event) => {
         this.logger.debug('TransactionSent event', event);
         // to be continued, decoding is needed here for omniverse
-        console.log(event.returnValues.pk, event.returnValues.nonce);
         let message = await ethereum.contractCall(
           this.omniverseContractContract,
           'transactionCache',
@@ -118,7 +117,7 @@ class EthereumHandler {
           message.timestamp != 0 &&
           event.returnValues.nonce == message.txData.nonce
         ) {
-          console.log('Got cached transaction', this.chainName);
+          this.logger.warn('Got cached transaction', this.chainName);
         } else {
           let messageCount = await ethereum.contractCall(
             this.omniverseContractContract,
@@ -132,7 +131,7 @@ class EthereumHandler {
               [event.returnValues.pk, event.returnValues.nonce]
             );
           } else {
-            console.log('No transaction got', this.chainName);
+            this.logger.warn('No transaction got', this.chainName);
             return;
           }
         }
@@ -143,11 +142,11 @@ class EthereumHandler {
           event.blockNumber,
         ];
 
-        await Database.insert(m, chainCount);
-        StateDB.setValue(this.chainName, event.blockNumber + 1);
         this.logger.info(
           `pk: ${message.txData.from}, nonce: ${message.txData.nonce}, chainName: ${this.chainName}, blockNumber: ${event.blockNumber}`
         );
+        await Database.insert(m, chainCount, this.logger);
+        StateDB.setValue(this.chainName, event.blockNumber + 1);
       })
       .on('changed', (event) => {
         // remove event from local database

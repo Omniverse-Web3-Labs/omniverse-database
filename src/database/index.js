@@ -99,7 +99,6 @@ class Db {
       } else {
         chains.set(value[1], value[3]);
         let chainsData = JSON.stringify(Array.from(chains.entries()));
-        console.log();
         if (chains.size == chainCount) {
           await Promise.all([
             this.database.run(
@@ -111,6 +110,7 @@ class Db {
               [pk, nonce]
             ),
           ]);
+          logger.info("settlemennt successfully ...");
         } else {
           await this.database.run(
             'INSERT INTO pendingTransactions (pk, nonce, chains) VALUES (?, ?, ?)',
@@ -126,6 +126,7 @@ class Db {
         [pk, nonce, JSON.stringify(Array.from(chains.entries()))]
       );
     }
+    logger.info("Insert successfully ...");
   }
 }
 

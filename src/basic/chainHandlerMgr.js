@@ -31,9 +31,9 @@ class chainHandlerMgr {
     }
 
     async run() {
-        const chainCount = this.chainHandlers.length;
+        const chainCount = Object.keys(this.chainHandlers).length;
         for (let i in this.chainHandlers) {
-            await this.chainHandlers[i].start(this, chainCount);
+            await this.chainHandlers[i].start(chainCount);
         }
     }
 

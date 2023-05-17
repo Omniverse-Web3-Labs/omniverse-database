@@ -19,7 +19,7 @@ for (let chainName in defaultConfig) {
     filename: `logs/${chainName}.log`,
   };
   configure.categories[chainName] = {
-    appenders: ['consoleout', chainName],
+    appenders: [chainName, 'consoleout'],
     level: 'all',
   };
 }
