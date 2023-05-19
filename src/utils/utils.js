@@ -1,8 +1,5 @@
 'use strict';
 
-const assert = require('assert');
-const logger = require('./logger');
-
 async function sleep(seconds) {
   await new Promise((resolve) => {
     setTimeout(() => {
