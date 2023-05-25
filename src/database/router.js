@@ -1,19 +1,16 @@
 module.exports = async function (app) {
-  app.get('/ominverse/v1/pending', async function (req, res) {
+  app.get('/omniverse/v1/pending', async function (req, res) {
     try {
       let chainName = req.query.chainName;
       let pk = req.query.pk;
-      let rows = [];
+      let rows;
       if (pk) {
         rows = await Database.getValue(
           'SELECT * FROM pendingTransactions WHERE pk = ?',
           [pk]
-        )
+        );
       } else {
-        rows = await Database.getValue(
-          'SELECT * FROM settlementTransactions',
-          [pk]
-        )
+        rows = await Database.getValue('SELECT * FROM pendingTransactions');
       }
       let result = [];
       for (let row of rows) {
@@ -32,13 +29,18 @@ module.exports = async function (app) {
       res.send({ code: -1, message: err.message });
     }
   });
-  app.get('/ominverse/v1/settlement', async function (req, res) {
+  app.get('/omniverse/v1/settlement', async function (req, res) {
     try {
       let pk = req.query.pk;
-      let rows = await Database.getValue(
-        'SELECT * FROM settlementTransactions WHERE pk = ?',
-        [pk]
-      );
+      let rows;
+      if (pk) {
+        rows = await Database.getValue(
+          'SELECT * FROM settlementTransactions WHERE pk = ?',
+          [pk]
+        );
+      } else {
+        rows = await Database.getValue('SELECT * FROM settlementTransactions');
+      }
       let result = [];
       for (let row of rows) {
         let parsedChains = JSON.parse(row.chains);

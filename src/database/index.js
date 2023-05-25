@@ -110,7 +110,7 @@ class Db {
               [pk, nonce]
             ),
           ]);
-          logger.info("settlemennt successfully ...");
+          logger.info('settlement successfully ...');
         } else {
           await this.database.run(
             'INSERT INTO pendingTransactions (pk, nonce, chains) VALUES (?, ?, ?)',
@@ -126,7 +126,7 @@ class Db {
         [pk, nonce, JSON.stringify(Array.from(chains.entries()))]
       );
     }
-    logger.info("Insert successfully ...");
+    logger.info('Insert successfully ...');
   }
 }
 
