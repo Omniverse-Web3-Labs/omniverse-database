@@ -113,8 +113,8 @@ class Db {
           logger.info('settlement successfully ...');
         } else {
           await this.database.run(
-            'INSERT INTO pendingTransactions (pk, nonce, chains) VALUES (?, ?, ?)',
-            [pk, nonce, chainsData]
+            'UPDATE pendingTransactions SET chains = ? WHERE pk = ? AND nonce = ?',
+            [chainsData, pk, nonce]
           );
         }
       }
