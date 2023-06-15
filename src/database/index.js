@@ -24,12 +24,16 @@ class Db {
         await this.database.run(
           `
                 CREATE TABLE IF NOT EXISTS pendingTransactions (
+                    tokenId text NULL,
                     pk text NOT NULL,
                     nonce int(128) NOT NULL,
                     chains text NOT NULL
               )`
         );
         await Promise.all([
+          this.database.run(
+            'CREATE INDEX token_id_index ON pendingTransactions (tokenId)'
+          ),
           this.database.run(
             'CREATE INDEX pk_index ON pendingTransactions (pk)'
           ),
@@ -48,6 +52,7 @@ class Db {
         await this.database.run(
           `
                 CREATE TABLE IF NOT EXISTS settlementTransactions (
+                    tokenId text NULL,
                     pk text NOT NULL,
                     nonce int(128) NOT NULL,
                     chains text NOT NULL
@@ -55,10 +60,13 @@ class Db {
         );
         await Promise.all([
           this.database.run(
+            'CREATE INDEX st_token_id_index ON settlementTransactions (tokenId)'
+          ),
+          this.database.run(
             'CREATE INDEX st_pk_index ON settlementTransactions (pk)'
           ),
           this.database.run(
-            'CREATE INDEX st_nonce_index ON pendingTransactions (nonce)'
+            'CREATE INDEX st_nonce_index ON settlementTransactions (nonce)'
           ),
         ]);
       }
@@ -75,20 +83,21 @@ class Db {
   }
 
   async insert(value, chainCount, logger) {
-    let [pk, chainName, nonce, blockNumber] = value;
+    let [pk, chainName, nonce, blockNumber, tokenId] = value;
     logger = logger ? logger : MainLogger;
     let settled = await this.database.get(
-      'SELECT * FROM settlementTransactions WHERE pk = ? AND nonce = ?',
-      [pk, nonce]
+      'SELECT * FROM settlementTransactions WHERE pk = ? AND nonce = ? AND tokenId = ?',
+      [pk, nonce, tokenId]
     );
+    // console.log(settled)
     if (settled) {
       logger.warn('pk: %s, nonce: %s already settlement', pk, nonce);
       return;
     }
 
     let pending = await this.database.get(
-      'SELECT * FROM pendingTransactions WHERE pk = ? AND nonce = ?',
-      [pk, nonce]
+      'SELECT * FROM pendingTransactions WHERE pk = ? AND nonce = ? AND tokenId = ?',
+      [pk, nonce, tokenId]
     );
 
     if (pending) {
@@ -102,19 +111,19 @@ class Db {
         if (chains.size == chainCount) {
           await Promise.all([
             this.database.run(
-              'INSERT INTO settlementTransactions (pk, nonce, chains) VALUES (?, ?, ?)',
-              [pk, nonce, chainsData]
+              'INSERT INTO settlementTransactions (tokenId, pk, nonce, chains) VALUES (?, ?, ?, ?)',
+              [tokenId, pk, nonce, chainsData]
             ),
             this.database.run(
-              'DELETE FROM pendingTransactions WHERE pk = ? AND nonce = ?',
-              [pk, nonce]
+              'DELETE FROM pendingTransactions WHERE pk = ? AND nonce = ? AND tokenId = ?',
+              [pk, nonce, tokenId]
             ),
           ]);
           logger.info('settlement successfully ...');
         } else {
           await this.database.run(
-            'UPDATE pendingTransactions SET chains = ? WHERE pk = ? AND nonce = ?',
-            [chainsData, pk, nonce]
+            'UPDATE pendingTransactions SET chains = ? WHERE pk = ? AND nonce = ? AND tokenId = ?',
+            [chainsData, pk, nonce, tokenId]
           );
         }
       }
@@ -122,8 +131,8 @@ class Db {
       let chains = new Map();
       chains.set(chainName, blockNumber);
       await this.database.run(
-        'INSERT INTO pendingTransactions (pk, nonce, chains) VALUES (?, ?, ?)',
-        [pk, nonce, JSON.stringify(Array.from(chains.entries()))]
+        'INSERT INTO pendingTransactions (tokenId, pk, nonce, chains) VALUES (?, ?, ?, ?)',
+        [tokenId, pk, nonce, JSON.stringify(Array.from(chains.entries()))]
       );
     }
     logger.info('Insert successfully ...');

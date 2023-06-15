@@ -17,11 +17,13 @@ module.exports = async function (app) {
         let parsedChains = JSON.parse(row.chains);
         let chains = new Map(parsedChains);
         if (!chains.has(chainName)) {
-          result.push({
+          let obj = {
+            tokenId: row.tokenId,
             pk: row.pk,
             nonce: row.nonce,
             chains: parsedChains,
-          });
+          };
+          result.push(obj);
         }
       }
       res.send({ code: 0, message: result });
@@ -45,6 +47,7 @@ module.exports = async function (app) {
       for (let row of rows) {
         let parsedChains = JSON.parse(row.chains);
         result.push({
+          tokenId: row.tokenId,
           pk: row.pk,
           nonce: row.nonce,
           chains: parsedChains,

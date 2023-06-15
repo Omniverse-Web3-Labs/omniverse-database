@@ -3,6 +3,7 @@ const compression = require('compression');
 //操作日期的插件
 const moment = require('moment');
 const cookieParser = require('cookie-parser');
+const config = require('config');
 
 async function dbService() {
   var app = express();
@@ -23,7 +24,7 @@ async function dbService() {
     next();
   });
   require('./router')(app);
-  var port = 8866;
+  var port = config.get('port');
   //监听端口
   app.listen(port);
 

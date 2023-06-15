@@ -1,29 +1,62 @@
 {
-  "scanInterval": 10,
-  "logLevel": "debug",
-  "secret": "config/.secret",
-  "database": "omniverse.db",
-  "stateDB": ".state",
-  "payload": {
-    "keys": ["op", "exData", "amount"],
-    "types": ["uint8", "bytes", "uint256"]
-  },
-  "networks": {
-    "CHAIN1": {
-      "nodeAddress": "ws://127.0.0.1:8646",
-      "chainId": 1337,
-      "omniverseContractAddress": "0x4a41672e9a217C3193b12483400b03CE1851e145",
-      "omniverseContractAbiPath": "./res/SkywalkerFungible.json",
-      "compatibleChain": "ethereum",
-      "omniverseChainId": 1
-    },
-    "CHAIN2": {
-      "nodeAddress": "ws://127.0.0.1:8647",
-      "chainId": 1337,
-      "omniverseContractAddress": "0x4a41672e9a217C3193b12483400b03CE1851e145",
-      "omniverseContractAbiPath": "./res/SkywalkerFungible.json",
-      "compatibleChain": "ethereum",
-      "omniverseChainId": 2
-    }
-  }
+	"scanInterval": 1,
+	"logLevel": "debug",
+	"secret": "config/.secret",
+	"database": "omniverse.db",
+	"stateDB": ".state",
+	"payload": {
+		"keys": [
+			"op",
+			"exData",
+			"amount"
+		],
+		"types": [
+			"uint8",
+			"bytes",
+			"uint256"
+		]
+	},
+	"networkTemp": {
+		"EVM": {
+			"omniverseContractAbiPath": "./res/EVMContract.json",
+			"compatibleChain": "ethereum"
+		},
+		"SUBSTRATE": {
+			"compatibleChain": "substrate"
+		}
+	},
+	"port": 9504,
+	"networks": {
+		"CHAIN1": {
+			"omniverseContractAbiPath": "./res/EVMContract.json",
+			"compatibleChain": "ethereum",
+			"nodeAddress": "http://127.0.0.1:9500",
+			"omniverseChainId": 1,
+			"chainId": 1337,
+			"omniverseContractAddress": {
+				"SKYWALKER": "0x4a41672e9a217C3193b12483400b03CE1851e145"
+			}
+		},
+		"CHAIN2": {
+			"omniverseContractAbiPath": "./res/EVMContract.json",
+			"compatibleChain": "ethereum",
+			"nodeAddress": "http://127.0.0.1:9501",
+			"omniverseChainId": 2,
+			"chainId": 1337,
+			"omniverseContractAddress": {
+				"SKYWALKER": "0x4a41672e9a217C3193b12483400b03CE1851e145"
+			}
+		},
+		"CHAIN3": {
+			"compatibleChain": "substrate",
+			"nodeAddress": "ws://127.0.0.1:9502",
+			"omniverseChainId": 3,
+			"tokenId": [
+				"SKYWALKER"
+			],
+			"pallets": [
+				"assets"
+			]
+		}
+	}
 }

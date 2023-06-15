@@ -46,11 +46,15 @@ class EthereumHandler {
     let omniverseContractRawData = fs.readFileSync(
       config.get('networks.' + this.chainName + '.omniverseContractAbiPath')
     );
+    this.omniverseContractContract = {};
     let omniverseContractAbi = JSON.parse(omniverseContractRawData).abi;
-    this.omniverseContractContract = new this.web3.eth.Contract(
-      omniverseContractAbi,
-      omniverseContractAddress
-    );
+    for (let tokenId in omniverseContractAddress) {
+      let contract = new this.web3.eth.Contract(
+        omniverseContractAbi,
+        omniverseContractAddress[tokenId]
+      );
+      this.omniverseContractContract[tokenId] = contract;
+    }
     this.chainId = config.get('networks.' + this.chainName + '.chainId');
     this.omniverseChainId = config.get(
       'networks.' + this.chainName + '.omniverseChainId'
@@ -98,66 +102,70 @@ class EthereumHandler {
       }
     }
     this.logger.info(this.chainName, 'Block height', fromBlock);
-    this.omniverseContractContract.events
-      .TransactionSent({
-        fromBlock: fromBlock,
-      })
-      .on('connected', (subscriptionId) => {
-        this.logger.info('TransactionSent connected', subscriptionId);
-      })
-      .on('data', async (event) => {
-        this.logger.debug('TransactionSent event', event);
-        // to be continued, decoding is needed here for omniverse
-        let message = await ethereum.contractCall(
-          this.omniverseContractContract,
-          'transactionCache',
-          [event.returnValues.pk]
-        );
-        if (
-          message.timestamp != 0 &&
-          event.returnValues.nonce == message.txData.nonce
-        ) {
-          this.logger.warn('Got cached transaction', this.chainName);
-        } else {
-          let messageCount = await ethereum.contractCall(
-            this.omniverseContractContract,
-            'getTransactionCount',
+    for (let tokenId in this.omniverseContractContract) {
+      let contract = this.omniverseContractContract[tokenId];
+      contract.events
+        .TransactionSent({
+          fromBlock: fromBlock,
+        })
+        .on('connected', (subscriptionId) => {
+          this.logger.info('TransactionSent connected', subscriptionId);
+        })
+        .on('data', async (event) => {
+          this.logger.debug('TransactionSent event', event);
+          // to be continued, decoding is needed here for omniverse
+          let message = await ethereum.contractCall(
+            contract,
+            'transactionCache',
             [event.returnValues.pk]
           );
-          if (messageCount > event.returnValues.nonce) {
-            message = await ethereum.contractCall(
-              this.omniverseContractContract,
-              'getTransactionData',
-              [event.returnValues.pk, event.returnValues.nonce]
-            );
+          if (
+            message.timestamp != 0 &&
+            event.returnValues.nonce == message.txData.nonce
+          ) {
+            this.logger.warn('Got cached transaction', this.chainName);
           } else {
-            this.logger.warn('No transaction got', this.chainName);
-            return;
+            let messageCount = await ethereum.contractCall(
+              contract,
+              'getTransactionCount',
+              [event.returnValues.pk]
+            );
+            if (messageCount > event.returnValues.nonce) {
+              message = await ethereum.contractCall(
+                contract,
+                'getTransactionData',
+                [event.returnValues.pk, event.returnValues.nonce]
+              );
+            } else {
+              this.logger.warn('No transaction got', this.chainName);
+              return;
+            }
           }
-        }
-        let m = [
-          message.txData.from,
-          this.chainName,
-          message.txData.nonce,
-          event.blockNumber,
-        ];
+          let m = [
+            message.txData.from,
+            this.chainName,
+            message.txData.nonce,
+            event.blockNumber,
+            tokenId,
+          ];
 
-        this.logger.info(
-          `pk: ${message.txData.from}, nonce: ${message.txData.nonce}, chainName: ${this.chainName}, blockNumber: ${event.blockNumber}`
-        );
-        await Database.insert(m, chainCount, this.logger);
-        StateDB.setValue(this.chainName, event.blockNumber + 1);
-      })
-      .on('changed', (event) => {
-        // remove event from local database
-        this.logger.info('TransactionSent changed');
-        this.logger.debug(event);
-      })
-      .on('error', (error, receipt) => {
-        // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-        this.logger.error('TransactionSent error', this.chainName, error);
-        this.logger.info('TransactionSent receipt', receipt);
-      });
+          this.logger.info(
+            `pk: ${message.txData.from}, nonce: ${message.txData.nonce}, chainName: ${this.chainName}, blockNumber: ${event.blockNumber}`
+          );
+          await Database.insert(m, chainCount, this.logger);
+          StateDB.setValue(this.chainName, event.blockNumber + 1);
+        })
+        .on('changed', (event) => {
+          // remove event from local database
+          this.logger.info('TransactionSent changed');
+          this.logger.debug(event);
+        })
+        .on('error', (error, receipt) => {
+          // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+          this.logger.error('TransactionSent error', this.chainName, error);
+          this.logger.info('TransactionSent receipt', receipt);
+        });
+    }
   }
 
   getProvider() {

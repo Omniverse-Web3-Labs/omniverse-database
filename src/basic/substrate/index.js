@@ -42,11 +42,11 @@ class SubstrateHandler {
             if (event.method == 'TransactionSent') {
               let pk = event.data[0].toHuman();
               let tokenId = event.data[1].toHuman();
-              if (tokenId != this.tokenId) {
+              if (!this.tokenId.includes(tokenId)) {
                 return;
               }
               let nonce = event.data[2].toHuman();
-              let m = [pk, this.chainName, nonce, blockNumber];
+              let m = [pk, this.chainName, nonce, blockNumber, tokenId];
               this.logger.info(
                 `pk: ${pk}, nonce: ${nonce}, chainName: ${this.chainName}, blockNumber: ${blockNumber}`
               );
